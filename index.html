@@ -97,6 +97,19 @@
   .bartrack{height:9px;border-radius:999px;background:var(--soft);overflow:hidden;}
   .barfill{height:100%;border-radius:999px;transition:width .6s ease;}
   .blendnote{font-size:14px;color:var(--muted);margin:4px 0 0;}
+  .patterns-h{font-size:13px;font-weight:800;color:var(--ink);text-transform:uppercase;letter-spacing:.05em;margin:22px 0 4px;padding-top:16px;border-top:2px solid var(--line);}
+  .patterns-sub{font-size:13.5px;color:var(--muted);margin:0 0 12px;}
+  .tabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px;}
+  .tab{background:var(--soft);border:1.5px solid var(--line);border-radius:999px;padding:8px 15px;font-size:13.5px;font-weight:700;color:var(--gd);cursor:pointer;font-family:inherit;transition:background .1s,border-color .1s,color .1s;}
+  .tab:hover{background:#e6f1ea;border-color:var(--g);}
+  .tab.active{background:var(--g);color:#fff;border-color:var(--gd);}
+  .tab .pct{font-weight:800;opacity:.75;margin-left:6px;font-size:12.5px;}
+  .tab-quote{font-size:15px;font-style:italic;color:var(--muted);margin:0 0 8px;}
+  .tab-thesis{font-size:16px;color:var(--gd);font-weight:700;margin:0 0 10px;}
+  .tab-def{font-size:15.5px;margin:0 0 12px;}
+  .attrs{margin:0 0 16px;padding:0;list-style:none;}
+  .attrs li{position:relative;padding:0 0 0 20px;margin:0 0 7px;font-size:14.5px;}
+  .attrs li:before{content:"";position:absolute;left:2px;top:8px;width:7px;height:7px;border-radius:50%;background:var(--g);}
   .ai{margin:18px 0;background:var(--soft);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
   .ai-head{font-size:12px;font-weight:700;color:var(--gd);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
   .ai-body{font-size:15.5px;white-space:pre-line;}
@@ -162,15 +175,16 @@
   <section id="results" class="card" hidden>
     <div class="r-tag">Your Parental Connection Style</div>
     <h1 id="r-name"></h1>
-    <p class="sub" id="r-sub"></p>
-    <div class="driver" id="r-driver"></div>
     <div class="bars" id="r-bars"></div>
     <p class="blendnote" id="r-blend"></p>
     <div class="ai" id="ai" hidden>
       <div class="ai-head" id="ai-head">A personalised read</div>
       <div class="ai-body" id="ai-body"></div>
     </div>
-    <div class="body" id="r-body"></div>
+    <div class="patterns-h">Explore your top patterns</div>
+    <p class="patterns-sub" id="r-patterns-sub"></p>
+    <div class="tabs" id="r-tabs" role="tablist"></div>
+    <div class="body" id="r-panel"></div>
     <div class="cta">
       <p>Want help making your steadiest pattern the one that shows up most, even on hard days? Book a free 30 minute consult. We will look at your connection style with you, hear what is going on at home, and tell you honestly whether we think we are a fit.</p>
       <a class="btn" id="r-book" href="#" target="_blank" rel="noopener">Explore Coaching</a>
@@ -215,6 +229,13 @@
      body:"WHAT THIS LOOKS LIKE\nYou are not perfect, and you did not score this way because you have it all figured out. You scored this way because, more often than not, you stay available to {C} even when parenting is hard. When they melt down, you feel the jolt, and then it settles. When they say something cutting, you let it land without it taking you out. When you mess up, you can name it, repair it, and move on without spiraling.\nWHY THIS IS A GIFT\nBecause you can stay steady, {C} gets to learn that connection can bend without breaking. They can be angry with you and still safe with you. They can push away and still find you there. That is the exact experience that builds a secure, resilient child, and you are giving it to {C} in ordinary moments they will not even remember.\nYOUR GROWING EDGE\nSecure does not mean finished. The edge for you is usually your own care. Anchors give steadiness away all day and can quietly run low. Protect the things that keep you regulated, and let yourself be anchored by someone too. The better you are resourced, the steadier {C} gets to lean."}
   ];   // 4: {slug,name,pattern,thesis,driver,body}
   var NAME2I={}; ARCH.forEach(function(a,i){ NAME2I[a.name]=i; });
+  // Per-archetype definition + hallmark signs, shown at the top of each results tab.
+  var ARCHX={
+    "the-pursuer":{def:"The Pursuer is a parent who loves hard and feels every wobble in the connection. When their child pulls away or pushes back, part of them reads it as an emergency and cannot rest until things feel okay again. The love is deep and real; the cost is how little peace there is while something feels unresolved.",attrs:["Chasing, over-explaining, or over-repairing after a rupture","Replaying hard moments and worrying you did damage","Finding it hard to let a small conflict just sit","A child's distance landing as an alarm, not a blip"]},
+    "the-wall":{def:"The Wall is a parent who stays composed and handles things quietly, especially when emotions run high. Underneath the calm, closeness at the wrong moment can feel like too much, so the instinct is to step back. It is not a lack of love; it is a system that reaches for distance when connection gets intense.",attrs:["Going quiet or flat when the room gets emotional","Preferring to handle hard moments on your own","Finding a lot of closeness or neediness draining","Calm on the outside, stepping back on the inside"]},
+    "the-storm":{def:"The Storm is a parent who runs warm and reactive, sometimes both in the same hour. One moment you are reaching for your child, the next you need space; you might over-apologize, then go cold. It usually means your own early experience did not hand you a steady model to draw on. It is not a character flaw, and it is not permanent.",attrs:["Swinging between closeness and needing distance","Big warmth and big reactions, sometimes back to back","Over-apologizing, then pulling away","Hard for your child to predict which parent they will get"]},
+    "the-anchor":{def:"The Anchor is a parent who, more often than not, stays available even when parenting is hard. You feel the jolt when things go sideways, and then it settles; you can repair a rupture and move on without spiraling. This is a secure pattern, and it is what teaches a child that connection can bend without breaking.",attrs:["Staying steady through your child's big feelings","Feeling the hit, then recovering fairly quickly","Repairing after a hard moment without spiraling","Letting your child lean on you and still stretch away"]}
+  };
   var P="The Pursuer", W="The Wall", S="The Storm", A="The Anchor";
 
   // Context questions are captured but not scored (scoring:null) and not shuffled (scenario:false).
@@ -389,9 +410,7 @@
     show("results");
     var bare=function(n){ return n.replace(/^The /,""); };
     var p=ARCH[LAST.primary], s=ARCH[LAST.secondary];
-    $("r-name").innerHTML=p.name+'<span class="r-pat">'+p.pattern+'</span>';
-    $("r-sub").textContent=cap(p.thesis);
-    $("r-driver").innerHTML="<b>What's underneath:</b> "+tok(p.driver);
+    $("r-name").textContent=p.name;
     var bars=$("r-bars"); bars.innerHTML="";
     var order=LAST.totals.map(function(t,i){return {i:i,t:t,pct:LAST.pct[i]};}).sort(function(a,b){return b.t-a.t||a.i-b.i;});
     order.forEach(function(o){
@@ -405,9 +424,44 @@
     $("r-blend").textContent = (LAST.totals[LAST.secondary]>0)
       ? ("Most parents are a mix. You lean mainly "+bare(p.name)+", with a strong "+bare(s.name)+" thread.")
       : "";
-    $("r-body").innerHTML=renderBody(p.body);
+    buildPatternTabs();
     var bk=$("r-book"); bk.href=BOOKING_URL;
     bk.addEventListener("click",function(){ track("cta_click",{location:"results"}); if(window.fbq) fbq("trackCustom","BookingClick"); });
+  }
+
+  function topThree(){
+    return LAST.totals.map(function(t,i){return {i:i,t:t,pct:LAST.pct[i]};})
+      .sort(function(a,b){return b.t-a.t||a.i-b.i;})
+      .filter(function(o){ return o.i===LAST.primary || o.t>0; })
+      .slice(0,3);
+  }
+  function buildPatternTabs(){
+    var top=topThree(); var tabs=$("r-tabs"); tabs.innerHTML="";
+    var sub=$("r-patterns-sub"); if(sub) sub.textContent=(top.length>1)?"You matched more than one. Tap through your top patterns to read each one.":"";
+    top.forEach(function(o,k){
+      var b=document.createElement("button"); b.type="button"; b.className="tab"+(k===0?" active":"");
+      b.setAttribute("role","tab"); b.setAttribute("aria-selected",k===0?"true":"false");
+      b.innerHTML=ARCH[o.i].name+'<span class="pct">'+o.pct+'%</span>';
+      b.addEventListener("click",function(){ selectPattern(o.i,b); track("pattern_tab",{archetype:ARCH[o.i].slug}); });
+      tabs.appendChild(b);
+    });
+    if(top.length) selectPattern(top[0].i, tabs.firstChild);
+  }
+  function selectPattern(i,btn){
+    var kids=$("r-tabs").children;
+    [].forEach.call(kids,function(c){ c.classList.remove("active"); c.setAttribute("aria-selected","false"); });
+    if(btn){ btn.classList.add("active"); btn.setAttribute("aria-selected","true"); }
+    var a=ARCH[i]; var subtitle=a.quote||a.pattern||"";
+    var html="";
+    if(subtitle) html+='<p class="tab-quote">'+tok(subtitle)+'</p>';
+    if(a.thesis) html+='<p class="tab-thesis">'+cap(a.thesis)+'</p>';
+    var x=(typeof ARCHX!=="undefined" && ARCHX[a.slug]) ? ARCHX[a.slug] : null;
+    if(x && x.def) html+='<p class="tab-def">'+tok(x.def)+'</p>';
+    if(x && x.attrs && x.attrs.length){ html+='<div class="sec-h">Common signs</div><ul class="attrs">';
+      x.attrs.forEach(function(at){ html+='<li>'+tok(at)+'</li>'; }); html+='</ul>'; }
+    if(a.driver) html+='<div class="driver"><b>What\'s underneath:</b> '+tok(a.driver)+'</div>';
+    if(a.body) html+=renderBody(a.body);
+    $("r-panel").innerHTML=html;
   }
 
   function emailValid(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
